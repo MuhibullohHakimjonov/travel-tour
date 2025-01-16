@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block main %}
+
+	{% if messages %}
+		<div aria-live="polite" aria-atomic="true">
+		  <div class="toast-container position-fixed top-0 end-0 p-3">
+			{% for message in messages %}
+			  <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+				<div class="toast-header">
+				  <strong class="me-auto">Success</strong>
+				  <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+				</div>
+				<div class="toast-body">
+				  {{ message }}
+				</div>
+			  </div>
+			{% endfor %}
+		  </div>
+		</div>
+	  {% endif %}
+		<section id="home" class="welcome-hero">
+			<div class="container">
+				<div class="welcome-hero-txt">
+					<h2>best place to find and explore <br> that all you need </h2>
+					<p>
+						Find Best Place, Restaurant, Hotel and many more think in just One click
+					</p>
+				</div>
+				<div class="welcome-hero-search-box">
+					<div class="welcome-hero-form">
+						<!-- Search by Tour Name -->
+						<div class="single-welcome-hero-form">
+							<h3>Search Tours</h3>
+							<form method="GET" action="{% url 'tour_search' %}">
+								<!-- Input for Tour Name -->
+								<input
+									type="text"
+									name="tour_name"
+									placeholder="Enter tour name, e.g., adventure, beach"
+								/>
+
+								<!-- Dropdown for Categories -->
+								<select name="category">
+									<option value="">All Categories</option>
+									{% for category in categories %}
+										<option value="{{ category.id }}">{{ category.name }}</option>
+									{% endfor %}
+								</select>
+
+								<!-- Search Button -->
+								<button class="welcome-hero-btn" type="submit">
+									Search <i data-feather="search"></i>
+								</button>
+							</form>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+		</section>
+
+
+
+		<section id="list-topics" class="list-topics">
+			<div class="container">
+				<div class="list-topics-content">
+					<ul>
+						{% for category in categories %}
+							<li>
+								<div class="single-list-topics-content">
+									<div class="category-image">
+										<img src="{{ category.get_image }}" alt="category image">
+									</div>
+									<div class="category-info">
+										<h2>{{ category.name }}</h2>
+										<p>{{ category.tours.count }} tours</p>
+									</div>
+								</div>
+							</li>
+						{% endfor %}
+
+					</ul>
+				</div>
+			</div>
+		</section>
+
+
+
+
+		<section id="explore" class="explore">
+			<div class="container">
+				<div class="section-header">
+					<h2>explore</h2>
+					<p>Explore New place, food, culture around the world and many more</p>
+				</div><!--/.section-header-->
+				<div class="explore-content">
+					<div class="row">
+					{% for tour in tours %}
+						<div class="col-md-4 col-sm-6">
+							<div class="single-explore-item">
+								<div class="single-explore-img">
+									<img src="{{ tour.get_image }}" alt="explore image" class="tour-image">
+								</div>
+								<div class="single-explore-txt bg-theme-1">
+									<h2><a href="#">{{ tour.name }}</a></h2>
+									<p class="explore-rating-price">
+											Price
+											<span class="explore-price">{{ tour.price }}$</span>
+										<hr>
+										{% for category in tour.category.all %}
+											<span class="explore-price"><a href="#">{{ category.name }}</a>{% if not forloop.last %}, {% endif %}</span>
+										{% endfor %}
+									</p>
+									<div class="row">
+										<div class="col-sm-11">
+											<p>
+												{{ tour.description|slice:75 }}...
+											</p>
+										</div>
+									</div>
+									<div class="explore-open-close-part">
+										<div class="">
+											<div class="">
+												<div class="explore-map-icon">
+												{% if request.user.is_authenticated %}
+													{% if tour in wishlist_tours %}
+														<a href="{% url 'wishlist_action' tour.pk %}">
+															<img src="{% static 'assets/img/heart_filled.png' %}" alt="heart icon">
+														</a>
+													{% else %}
+														<a href="{% url 'wishlist_action' tour.pk %}">
+															<img src="{% static 'assets/img/heart.png' %}" alt="heart icon">
+														</a>
+													{% endif %}
+												{% else %}
+													<!-- Open the login modal for unauthenticated users -->
+												{% endif %}
+											</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					{% endfor %}
+
+
+
+						<div class="modal fade" id="wishlistModal" tabindex="-1" aria-labelledby="wishlistModalLabel" aria-hidden="true">
+							<div class="modal-dialog">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title" id="wishlistModalLabel">My Wishlist</h5>
+										<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+									</div>
+									<div class="modal-body">
+										{% if wishlist_tours %}
+											<ul class="list-group">
+												{% for tour in wishlist_tours %}
+													<li class="list-group-item d-flex justify-content-between align-items-center">
+														<div>
+															<h5>{{ tour.name }}</h5>
+															<p>{{ tour.price }}$</p>
+														</div>
+														<button class="btn btn-danger" onclick="window.location.href='{% url 'wishlist_action' tour.pk %}'">Remove</button>
+													</li>
+												{% endfor %}
+											</ul>
+										{% else %}
+											<p>Your wishlist is empty!</p>
+										{% endif %}
+									</div>
+								</div>
+							</div>
+						</div>
+
+
+					</div>
+				</div>
+			</div>
+
+		</section>
+
+
+		<div class="modal fade" id="sendRequestModal" tabindex="-1" role="dialog" aria-labelledby="sendRequestModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="sendRequestModalLabel">Отправить заявку</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<form method="POST" action="{% url 'index' %}">
+							{% csrf_token %}
+							<div class="form-group">
+								<label for="name">Ваше имя</label>
+								<input type="text" class="form-control" id="name" name="name" required>
+							</div>
+							<div class="form-group">
+								<label for="phone">Телефон</label>
+								<input type="text" class="form-control" id="phone" name="phone" required>
+							</div>
+							<div class="form-group">
+								<label for="email">Электронная почта</label>
+								<input type="email" class="form-control" id="email" name="email" required>
+							</div>
+							<button type="submit" class="btn btn-success">Отправить заявку</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+
+
+
+
+
+
+{% endblock main %}
